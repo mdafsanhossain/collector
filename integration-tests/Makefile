@@ -31,6 +31,23 @@ endef
 # Generates all the specific test targets
 $(foreach element,$(ALL_TESTS),$(eval $(call make-test-target,$(element))))
 
+define make-container-target
+containerized-$1: docker-clean
+	docker run \
+		-v /var/run/docker.sock:/var/run/docker.sock \
+		-e QUAY_RHACS_ENG_RO_USERNAME \
+		-e QUAY_RHACS_ENG_RO_PASSWORD \
+		-e COLLECTION_METHOD \
+		-e COLLECTOR_IMAGE \
+		-e COLLECTOR_REPO \
+		-e VM_CONFIG \
+		-e COLLECTOR_OFFLINE_MODE \
+		collector-tests:latest \
+		-timeout 60m -v -count=1 -run $1 2>&1 | tee integration-test.log
+endef
+
+$(foreach element,$(ALL_TESTS),$(eval $(call make-container-target,$(element))))
+
 # Run everything on CI, rather than specific tests.
 .PHONY: ci-integration-tests
 ci-integration-tests: docker-clean
@@ -45,6 +62,10 @@ ci-benchmarks: benchmark
 .PHONY: docker-clean
 docker-clean:
 	docker rm -fv container-stats benchmark collector grpc-server 2>/dev/null || true
+
+.PHONY: docker-build
+docker-build:
+	docker build -t collector-tests .
 
 .PHONY:
 benchmark: TestBenchmarkCollector
