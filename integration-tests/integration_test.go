@@ -124,7 +124,7 @@ func TestUdp(t *testing.T) {
 	suite.Run(t, udpTestSuite)
 }
 
-//func TestUdpDisabled(t *testing.T) {
-//	udpTestSuite := &suites.UdpTestSuite{CollectUdp: false}
-//	suite.Run(t, udpTestSuite)
-//}
+func TestUdpDisabled(t *testing.T) {
+	udpTestSuite := &suites.UdpTestSuite{CollectUdp: false}
+	suite.Run(t, udpTestSuite)
+}

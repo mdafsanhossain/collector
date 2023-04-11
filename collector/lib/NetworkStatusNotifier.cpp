@@ -285,7 +285,6 @@ void NetworkStatusNotifier::RunSingleAfterglow(IDuplexClientWriter<sensor::Netwo
     }
 
     if (!msg) {
-      CLOG(INFO) << "!msg";
       continue;
     }
 
@@ -299,7 +298,6 @@ void NetworkStatusNotifier::RunSingleAfterglow(IDuplexClientWriter<sensor::Netwo
 }
 
 sensor::NetworkConnectionInfoMessage* NetworkStatusNotifier::CreateInfoMessage(const ConnMap& conn_delta, const AdvertisedEndpointMap& endpoint_delta) {
-  CLOG(INFO) << "conn_delta.size()= " << conn_delta.size() << " endpoint_delta.size()= " << endpoint_delta.size();
   if (conn_delta.empty() && endpoint_delta.empty()) return nullptr;
 
   Reset();
