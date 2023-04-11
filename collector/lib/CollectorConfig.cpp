@@ -55,6 +55,9 @@ BoolEnvVar set_enable_core_dump("ENABLE_CORE_DUMP", false);
 // If true, add originator process information in NetworkEndpoint
 BoolEnvVar set_processes_listening_on_ports("ROX_PROCESSES_LISTENING_ON_PORT", CollectorConfig::kEnableProcessesListeningOnPorts);
 
+// If true, UDP listening endpoints will be reported
+BoolEnvVar set_is_udp_collected("ROX_COLLECT_UDP", false);
+
 }  // namespace
 
 constexpr bool CollectorConfig::kUseChiselCache;
@@ -78,6 +81,7 @@ CollectorConfig::CollectorConfig(CollectorArgs* args) {
   collection_method_ = kCollectionMethod;
   force_kernel_modules_ = kForceKernelModules;
   enable_processes_listening_on_ports_ = set_processes_listening_on_ports.value();
+  is_udp_collected_ = set_is_udp_collected.value();
 
   for (const auto& syscall : kSyscalls) {
     syscalls_.push_back(syscall);
@@ -193,6 +197,13 @@ CollectorConfig::CollectorConfig(CollectorArgs* args) {
 
   if (set_enable_core_dump) {
     enable_core_dump_ = true;
+  }
+
+  if (set_is_udp_collected) {
+    is_udp_collected_ = true;
+    CLOG(INFO) << "Collecting UDP listening endpoints";
+  } else {
+    CLOG(INFO) << "Not collecting UDP listening endpoints";
   }
 
   HandleAfterglowEnvVars();

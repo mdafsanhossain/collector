@@ -118,3 +118,13 @@ func TestSocat(t *testing.T) {
 func TestDuplicateEndpoints(t *testing.T) {
 	suite.Run(t, new(suites.DuplicateEndpointsTestSuite))
 }
+
+func TestUdp(t *testing.T) {
+	udpTestSuite := &suites.UdpTestSuite{CollectUdp: true}
+	suite.Run(t, udpTestSuite)
+}
+
+//func TestUdpDisabled(t *testing.T) {
+//	udpTestSuite := &suites.UdpTestSuite{CollectUdp: false}
+//	suite.Run(t, udpTestSuite)
+//}
