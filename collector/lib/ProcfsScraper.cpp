@@ -367,7 +367,7 @@ bool ProcessUdpEndpoints(const std::vector<ConnLineData>& conn_lines,
   UnorderedSet<Endpoint> all_listen_endpoints;
 
   for (auto data : conn_lines) {
-    if (data.remote.port() == 0 && data.remote.address() == Address(0, 0, 0, 0) && !IsEphemeralPort(data.local.port())) {
+    if (data.remote.port() == 0 && data.remote.address() == Address(0, 0, 0, 0) && IsEphemeralPort(data.local.port()) < 3) {
       all_listen_endpoints.insert(data.local);
       if (data.inode && listen_endpoints) {
         auto& endpoint_info = (*listen_endpoints)[data.inode];
@@ -398,12 +398,12 @@ bool ReadConnectionsAndEndpointsFromFile(Address::Family family, std::FILE* f, L
 
 // GetConnectionsAndEndpoints reads all active connections (inode -> connection info mapping) for a given network NS, addressed by
 // the dir FD for a proc entry of a process in that network namespace.
-bool GetConnectionsAndEndpoints(int dirfd, bool is_udp_collected, UnorderedMap<ino_t, ConnInfo>* connections, UnorderedMap<ino_t, EndpointInfo>* listen_endpoints) {
+bool GetConnectionsAndEndpoints(int dirfd, bool are_udp_listening_endpoints_collected, UnorderedMap<ino_t, ConnInfo>* connections, UnorderedMap<ino_t, EndpointInfo>* listen_endpoints) {
   bool success = true;
 
   std::vector<std::tuple<std::string, L4Proto>> net_files_with_l4protocols{std::make_tuple("net/tcp", L4Proto::TCP)};
 
-  if (is_udp_collected) {
+  if (are_udp_listening_endpoints_collected) {
     net_files_with_l4protocols.push_back(std::make_tuple("net/udp", L4Proto::UDP));
     net_files_with_l4protocols.push_back(std::make_tuple("net/udplite", L4Proto::UDP));
   }
@@ -475,7 +475,7 @@ void ResolveSocketInodes(const SocketsByContainer& sockets_by_container, const C
 // ReadContainerConnections reads all container connection info from the given `/proc`-like directory. All connections
 // from non-container processes are ignored.
 // process_store, when provided, is used to to link the originator process of a ContainerEndpoint.
-bool ReadContainerConnections(const char* proc_path, bool is_udp_collected, std::shared_ptr<ProcessStore> process_store,
+bool ReadContainerConnections(const char* proc_path, bool are_udp_listening_endpoints_collected, std::shared_ptr<ProcessStore> process_store,
                               std::vector<Connection>* connections, std::vector<ContainerEndpoint>* listen_endpoints) {
   DirHandle procdir = opendir(proc_path);
   if (!procdir.valid()) {
@@ -526,7 +526,7 @@ bool ReadContainerConnections(const char* proc_path, bool is_udp_collected, std:
       if (emplace_res.second) {
         auto& ns_network_data = emplace_res.first->second;
 
-        if (!GetConnectionsAndEndpoints(dirfd, is_udp_collected, &ns_network_data.connections, listen_endpoints ? &ns_network_data.listen_endpoints : nullptr)) {
+        if (!GetConnectionsAndEndpoints(dirfd, are_udp_listening_endpoints_collected, &ns_network_data.connections, listen_endpoints ? &ns_network_data.listen_endpoints : nullptr)) {
           // If there was an error reading connections, that could be due to a number of reasons.
           // We need to differentiate persistent errors (e.g., expected net/tcp6 file not found)
           // from spurious/race condition errors caused by the process disappearing while reading
@@ -622,7 +622,7 @@ std::string_view ExtractContainerID(std::string_view cgroup_line) {
 }
 
 bool ConnScraper::Scrape(std::vector<Connection>* connections, std::vector<ContainerEndpoint>* listen_endpoints) {
-  return ReadContainerConnections(proc_path_.c_str(), is_udp_collected_, process_store_, connections, listen_endpoints);
+  return ReadContainerConnections(proc_path_.c_str(), are_udp_listening_endpoints_collected_, process_store_, connections, listen_endpoints);
 }
 
 bool ProcessScraper::Scrape(uint64_t pid, ProcessInfo& process_info) {

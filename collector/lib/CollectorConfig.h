@@ -108,7 +108,7 @@ end
   bool IsCoreDumpEnabled() const;
   Json::Value TLSConfiguration() const { return tls_config_; }
   bool IsProcessesListeningOnPortsEnabled() const { return enable_processes_listening_on_ports_; }
-  bool IsUdpCollected() const { return is_udp_collected_; }
+  bool AreUdpListeningEndpointsCollected() const { return are_udp_listening_endpoints_collected_; }
 
   std::shared_ptr<grpc::Channel> grpc_channel;
 
@@ -132,7 +132,7 @@ end
   bool enable_afterglow_ = true;
   bool enable_core_dump_ = false;
   bool enable_processes_listening_on_ports_;
-  bool is_udp_collected_ = false;
+  bool are_udp_listening_endpoints_collected_ = false;
 
   Json::Value tls_config_;
 };
