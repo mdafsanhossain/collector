@@ -28,7 +28,7 @@ func (s *UdpTestSuite) SetupSuite() {
 
 	s.collector.Env["COLLECTOR_CONFIG"] = `{"logLevel":"debug","turnOffScrape":false,"scrapeInterval":2}`
 	s.collector.Env["ROX_PROCESSES_LISTENING_ON_PORT"] = "true"
-	s.collector.Env["ROX_COLLECT_UDP"] = strconv.FormatBool(s.CollectUdp)
+	s.collector.Env["ROX_COLLECT_UDP_LISTENING_ENDPOINTS"] = strconv.FormatBool(s.CollectUdp)
 
 	err := s.collector.Setup()
 	s.Require().NoError(err)
